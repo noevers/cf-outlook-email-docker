@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  outlook-email:
+    build: .
+    image: cf-outlook-email:latest
+    container_name: outlook-email
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    environment:
+      - ADMIN_PASSWORD=***  # 登录后台密码，启动后可在网页端使用
+      - PORT=8787
+      # - GPTMAIL_API_KEY=***  # 可选：临时邮箱 API Key
+    volumes:
+      - ./data:/app/data  # SQLite 数据库持久化目录，重启容器数据不丢
