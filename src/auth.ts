@@ -75,18 +75,8 @@ export async function verifyPassword(
   password: string,
   adminPassword: string
 ): Promise<boolean> {
-  // First check if there is a password hash in settings
-  const row = await first<SettingRow>(db, 'SELECT value FROM settings WHERE key = ?', [
-    'login_password_hash',
-  ]);
-
-  if (row) {
-    const inputHash = await hashPassword(password);
-    return inputHash === row.value;
-  }
-
-  // Fallback: compare with ADMIN_PASSWORD secret directly, then store hash
-  if (password === adminPassword) {
+  // 1. 如果输入密码与当前配置的环境变量 ADMIN_PASSWORD (默认 admin123) 一致，直接通过并同步更新数据库
+  if (adminPassword && password === adminPassword) {
     const hashed = await hashPassword(password);
     await db
       .prepare(
@@ -95,6 +85,16 @@ export async function verifyPassword(
       .bind(hashed)
       .run();
     return true;
+  }
+
+  // 2. 校验在前端系统设置里修改过的自定义密码哈希
+  const row = await first<SettingRow>(db, 'SELECT value FROM settings WHERE key = ?', [
+    'login_password_hash',
+  ]);
+
+  if (row) {
+    const inputHash = await hashPassword(password);
+    return inputHash === row.value;
   }
 
   return false;
