@@ -11,17 +11,8 @@ if [ ! -f wrangler.toml ]; then
 fi
 
 # 2. 注入环境变量与密钥
-if [ -z "$ADMIN_PASSWORD" ]; then
-  ADMIN_PWD="admin123"
-else
-  ADMIN_PWD="$ADMIN_PASSWORD"
-fi
-
-if [ -z "$COOKIE_SECRET" ]; then
-  COOKIE_SEC="aK3mX9pQ2wE8rT6yU1iO4sD7fG0hJ5laK3mX9pQ"
-else
-  COOKIE_SEC="$COOKIE_SECRET"
-fi
+ADMIN_PWD="${ADMIN_PASSWORD:-admin123}"
+COOKIE_SEC="${COOKIE_SECRET:-aK3mX9pQ2wE8rT6yU1iO4sD7fG0hJ5laK3mX9pQ}"
 
 cat > .dev.vars <<EOF
 ADMIN_PASSWORD=$ADMIN_PWD
@@ -32,14 +23,11 @@ if [ -n "$GPTMAIL_API_KEY" ]; then
   echo "GPTMAIL_API_KEY=$GPTMAIL_API_KEY" >> .dev.vars
 fi
 
-# 3. 自动执行 D1 (SQLite) 数据库表结构迁移
+# 3. 自动执行 D1 (SQLite) 数据库表结构迁移（包含 0001_init, 0002_tags, 0003_push_state）
 echo "正在检查并初始化本地 SQLite 数据库..."
 npx wrangler d1 migrations apply outlook-email-db --local --persist-to "$DATA_DIR"
 
-if [ -z "$PORT" ]; then
-  PORT="8787"
-fi
-
+PORT="${PORT:-8787}"
 echo "=========================================================="
 echo " Outlook 邮件管理面板 (Docker 独立版) 已启动"
 echo " 访问端口: $PORT"
@@ -47,7 +35,8 @@ echo " 登录密码: $ADMIN_PWD"
 echo " 数据目录: $DATA_DIR"
 echo "=========================================================="
 
-# 4. 后台定时触发器
+# 4. 启动后台定时任务调度器（模拟 Cloudflare Cron Triggers）
+# 默认每 5 分钟自动唤醒一次，用于自动续期 Token 和 Telegram 邮件轮询推送
 (
   sleep 10
   while true; do
