@@ -1,4 +1,4 @@
-FROM node:22-alpine
+FROM node:22-slim
 
 LABEL maintainer="noevers"
 LABEL description="Dockerized Outlook Email Manager (cf-outlook-email)"
@@ -6,7 +6,7 @@ LABEL description="Dockerized Outlook Email Manager (cf-outlook-email)"
 WORKDIR /app
 
 # 安装基础依赖
-RUN apk add --no-cache curl ca-certificates
+RUN apt-get update && apt-get install -y --no-install-recommends     curl     ca-certificates   && rm -rf /var/lib/apt/lists/*
 
 # 复制依赖配置并预装
 COPY package*.json pnpm-lock.yaml* ./
