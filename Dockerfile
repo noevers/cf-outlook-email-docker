@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:22-alpine
 
 LABEL maintainer="noevers"
 LABEL description="Dockerized Outlook Email Manager (cf-outlook-email)"
